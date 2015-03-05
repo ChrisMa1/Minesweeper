@@ -1,4 +1,4 @@
-public static final int numBombs=3;
+public static final int numBombs=70;
 public static final int rows= 25;
 public static final int columns=25;
 public int squaresCovered=rows*columns;
