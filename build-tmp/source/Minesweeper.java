@@ -1,50 +1,50 @@
-public static final int numBombs=3;
+import processing.core.*; 
+import processing.data.*; 
+import processing.event.*; 
+import processing.opengl.*; 
+
+import java.util.HashMap; 
+import java.util.ArrayList; 
+import java.io.File; 
+import java.io.BufferedReader; 
+import java.io.PrintWriter; 
+import java.io.InputStream; 
+import java.io.OutputStream; 
+import java.io.IOException; 
+
+public class Minesweeper extends PApplet {
+
+public static final int numBombs=20;
 public static final int rows= 25;
-public static final int columns=25;
+public static final int columns=20;
 public int squaresCovered=rows*columns;
 public boolean gameOver=false;
 public Button [][] buttons;
-void setup() {
+public void setup() {
   buttons=new Button[rows][columns];
   for (int i=0; i<rows; i++) {
     for (int j=0; j<columns; j++) {
       buttons[i][j]=new Button(i, j);
     }
   }
-  size(625, 625);
-  showBoard();
+  size(columns*25+100, rows*25+100);
+  createBoard();
 }
-void draw() {
-  showBoard(); 
-  if(!gameOver){
-    if (squaresCovered==numBombs) {
-      fill(255);
-      stroke(0);
-      rectMode(CENTER);
-      rect(width/2,height/2, 150,50);
-      fill(255, 0, 0);
-      textSize(30);
-      textAlign(CENTER,CENTER);
-      text("You Win!", width/2, height/2);
-      gameOver=false;
-    }
-  }else{
-      fill(255);
-      stroke(0);
-      rectMode(CENTER);
-      rect(width/2,height/2, 150,50);
-     fill(255, 0, 0);
-     textSize(30);
-     textAlign(CENTER,CENTER);
-     text("You Lose!", width/2, height/2); 
+public void draw() {
+  if(squaresCovered==numBombs){
+    gameOver=true; 
+    text("You Win!",width/2-50,height/2-50);
   }
+  if (!gameOver)
+    showBoard(); 
 }
-public void createBoard(int x, int y) {
+public void createBoard() {
   for (int i=0; i<numBombs; i++) { 
     int r= (int)(Math.random()*rows);
     int c= (int)(Math.random()*columns);
-    if (buttons[r][c].value != 13 || !(x==c && r==y)) {
+    if (buttons[r][c].value != 13) {
       buttons[r][c].value=13;
+      fill(0);
     } else {
       i--;
     }
@@ -71,26 +71,23 @@ public void showBoard() {
   background(255);
   strokeWeight(1);
   stroke(0);
-  for (int i=0; i<=rows; i++) {   //draw grid lines
-    line(0, i*25, columns*25, i*25);
+  for (int i=0; i<=height; i+=25) {   //draw grid lines
+    line(0, i, width, i);
   }
-  for (int i=0; i<=columns; i++) {
-    line(i*25, 0, i*25, rows*25);
+  for (int i=0; i<=width; i+=25) {
+    line(i, 0, i, height);
   }
-
   for (int i=0; i<rows; i++) { //SHOW VALUES
     for (int j=0; j<columns; j++) {
       if (buttons[i][j].value==13) {
         fill(0);
         noStroke();
-        ellipse(j*25+12.5, i*25+12.5, 10, 10);
+        ellipse(i*25+12.5f, j*25+12.5f, 10, 10);
       } else {
         if (buttons[i][j].value==0) {
         } else {
           fill(0);
-          textAlign(BASELINE,LEFT);
-          textSize(15);
-          text(buttons[i][j].value, j*25+10, i*25+18.75);
+          text(buttons[i][j].value, i*25+10, j*25+18.75f);
         }
       }
     }
@@ -109,14 +106,14 @@ public class Button {
   int xPos;
   int yPos;
   int value;
-  Button(int r, int c) {
+  Button(int x, int y) {
     shown=true;
     flagged=false;
-    xPos=c; 
-    yPos=r;
+    xPos=x; 
+    yPos=y;
     value=0;
   }
-  void show() {
+  public void show() {
     stroke(0);
     if (shown) {
       if (mouseX>xPos*25 && mouseX<xPos*25+25 && mouseY>yPos*25 && mouseY< yPos*25+25) {
@@ -124,45 +121,45 @@ public class Button {
       } else {
         fill(200, 200, 200);
       }      
-      if (flagged)fill(255, 0, 0);
-        rectMode(CORNER);
-        rect(xPos*25, yPos*25, 25, 25);
+      if(flagged)fill(255,0,0);
+      rect(xPos*25, yPos*25, 25, 25);
     } else {
-      if (this.value==13) {
-        gameOver=true;
-      }
+      if (this.value==13)gameOver=true;
     }
   }
-  void clear() {
-    if (this.shown) {
+  public void clear() {
+    if (this.shown==true) {
       if (this.value==0) {
-        squaresCovered--;
         for (int i=-1; i<2; i++) {
           for (int j=-1; j<2; j++) {
-            if (yPos+i>=0 && yPos+i<rows && xPos+j>=0 && xPos+j<columns) {
+            if (xPos+i>=0 && xPos+i<rows && yPos+j>=0 && yPos+j<columns) {
               shown=false;
-              buttons[yPos+i][xPos+j].clear();
+              buttons[xPos+i][yPos+j].clear();
+              squaresCovered--;
             }
           }
         }
       } else {
         this.shown=false;
-        squaresCovered--;
       }
     }
   }
 }
-void mouseReleased() {
-  if (squaresCovered==rows*columns && mouseButton== LEFT) {
-    createBoard((int)(mouseY/25), (int)(mouseX/25));
+public void mouseReleased() {
+  if (mouseButton== LEFT) {
+    buttons[(int)(mouseX/25)][(int)(mouseY/25)].clear();
   }
-  if (gameOver==false) {
-    if (mouseButton== LEFT && !buttons[(int)(mouseY/25)][(int)(mouseX/25)].flagged) {
-      buttons[(int)(mouseY/25)][(int)(mouseX/25)].clear();
-    }
-    if (mouseButton== RIGHT) {
-      buttons[(int)(mouseY/25)][(int)(mouseX/25)].flagged=!buttons[(int)(mouseY/25)][(int)(mouseX/25)].flagged;
-    }
+  if (mouseButton== RIGHT) {
+    buttons[(int)(mouseX/25)][(int)(mouseY/25)].flagged=true;
   }
 }
 
+  static public void main(String[] passedArgs) {
+    String[] appletArgs = new String[] { "Minesweeper" };
+    if (passedArgs != null) {
+      PApplet.main(concat(appletArgs, passedArgs));
+    } else {
+      PApplet.main(appletArgs);
+    }
+  }
+}
