@@ -11,7 +11,7 @@ void setup() {
       buttons[i][j]=new Button(i, j);
     }
   }
-  size(625, 625);
+  size(626, 626);
   showBoard();
 }
 void draw() {
